@@ -1,0 +1,18 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP LED_3535
+D LED SMD 3535
+K LED
+$ENDCMP
+#
+$CMP LED_5050
+D Connector, double row, 02x02
+K connector
+$ENDCMP
+#
+$CMP WS2812B
+D RGB LED SMD WS2812B
+K LED
+$ENDCMP
+#
+#End Doc Library

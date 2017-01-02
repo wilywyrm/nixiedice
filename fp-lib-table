@@ -1,0 +1,6 @@
+(fp_lib_table
+  (lib (name "Cherry Switches")(type KiCad)(uri ${KIPRJMOD}/footprints/cherry.pretty)(options "")(descr ""))
+  (lib (name Nixies)(type KiCad)(uri ${KIPRJMOD}/footprints/nixies.pretty)(options "")(descr ""))
+  (lib (name Arduino)(type KiCad)(uri ${KIPRJMOD}/footprints/arduino.pretty)(options "")(descr ""))
+  (lib (name "TES Power Supplies")(type KiCad)(uri ${KIPRJMOD}/footprints/tes.pretty)(options "")(descr ""))
+)
