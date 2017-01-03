@@ -40,7 +40,6 @@ const uint32_t CYAN  = strip.Color(0, 128, 128);
 const uint32_t RED = strip.Color(128, 0, 0);
 const uint32_t ORANGE = strip.Color(128, 64, 0);
 const uint32_t PURPLE = strip.Color(64, 0, 128);
-const uint32_t FAINTRED = strip.Color(64, 0, 0);
 
 RotaryEncoder NSel (NSEL_A, NSEL_B);
 RotaryEncoder DSel (DSEL_A, DSEL_B);
@@ -100,7 +99,7 @@ uint8_t lastDSel = 20;
 uint32_t lastActive = 0;
 
 void loop() {
-    
+
     uint8_t curNSel = lastNSel;
     uint8_t curDSel = lastDSel;
     setHigherHalf(curNSel);
@@ -580,7 +579,7 @@ void sleep(){
                 b++;
             else
                 b--;
-            uint32_t color = strip.Color(b,0,0);
+            uint32_t color = strip.Color(0,0,b);
             if(color == BLUE)
                 fading = true;
             else if(color == 0)
