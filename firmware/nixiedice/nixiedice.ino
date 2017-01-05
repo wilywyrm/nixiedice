@@ -206,13 +206,15 @@ void loop() {
         oldNSelPos = newNSelPos;
         oldDSelPos = newDSelPos;
 
-        if(millis() % 500 == 0)
+        if(millis() % 500 == 0){
             middleTube = !middleTube;
+            delay(1);
+        }
         setIndicator(2, middleTube);
         setHigherHalf(curNSel);
         setLowerHalf(curDSel);
         show();
-
+        
         if(digitalRead(BTN_RST) == LOW){
             delay(10);  // debounce initial presses
             Serial.println("RESET pressed");
@@ -286,26 +288,34 @@ roll:
 
     while(digitalRead(BTN_GO) == LOW){
         uint32_t t = millis();
+        bool triggered = false;
         if(t % 200 == 0){
             uint16_t dispValue = random(0, 9999+1);
             Serial.print("Randomly displaying ");
             Serial.println(dispValue);
             setAllDigits(dispValue);
+            triggered = true;
         }
-        if(t % 300 == 0)
+        if(t % 667 == 0){
             whichOne = (whichOne + 1) % 3;
-        clearIndicators();
-        setIndicator(whichOne + 1, true);
-        show();
-
+            triggered = true;
+        }
+        
         if(t % 500 == 0){
             Serial.println(theaterChaseIdx);
             theaterChaseIdx = (theaterChaseIdx + 1) % NUM_RGB;
             setAllLEDs(0);
             strip.setPixelColor(theaterChaseIdx, MAGENTA);
             strip.show();
-            delay(1);
+            triggered = true;
         }
+
+        clearIndicators();
+        setIndicator(whichOne + 1, true);
+        show();
+
+        if(triggered)
+            delay(1);
     }
 
     delay(10);
@@ -673,8 +683,9 @@ void setIndicator(uint8_t tube, bool value){
     if(tube > 3) // there are only three indicator tubes here
         return;  // and again, we are not zero-indexing. (tube 1-3)
 
-    reg3 &= 0 << 8-tube;
-    reg3 |= (value & 1) << 8-tube;
+    reg3 &= ~(1 << (8-tube));
+    if(value)
+       reg3 |= 1 << (8-tube);
 }
 
 void setAllIndicators(bool value){
