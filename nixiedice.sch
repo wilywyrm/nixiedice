@@ -1805,4 +1805,5 @@ Wire Wire Line
 	7500 2350 7850 2350
 Text Notes 800  7600 0    60   ~ 0
 Maybe you'll want to do something with these? idk
+NoConn ~ 2650 4350
 $EndSCHEMATC

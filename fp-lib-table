@@ -3,4 +3,5 @@
   (lib (name Nixies)(type KiCad)(uri ${KIPRJMOD}/footprints/nixies.pretty)(options "")(descr ""))
   (lib (name Arduino)(type KiCad)(uri ${KIPRJMOD}/footprints/arduino.pretty)(options "")(descr ""))
   (lib (name "TES Power Supplies")(type KiCad)(uri ${KIPRJMOD}/footprints/tes.pretty)(options "")(descr ""))
+  (lib (name Custom)(type KiCad)(uri "$(KIPRJMOD)\\Custom.pretty")(options "")(descr ""))
 )
