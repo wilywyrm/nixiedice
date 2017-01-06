@@ -283,7 +283,7 @@ roll:
     uint8_t whichOne = 0;
     uint8_t theaterChaseIdx = 0;
     setAllLEDs(0);
-    strip.setPixelColor(theaterChaseIdx, MAGENTA);
+    strip.setPixelColor(NUM_RGB - theaterChaseIdx, MAGENTA);
     strip.show();
 
     while(digitalRead(BTN_GO) == LOW){
@@ -302,16 +302,15 @@ roll:
         }
         
         if(t % 500 == 0){
-            Serial.println(theaterChaseIdx);
             theaterChaseIdx = (theaterChaseIdx + 1) % NUM_RGB;
             setAllLEDs(0);
-            strip.setPixelColor(theaterChaseIdx, MAGENTA);
+            strip.setPixelColor(NUM_RGB - theaterChaseIdx, MAGENTA);
             strip.show();
             triggered = true;
         }
 
         clearIndicators();
-        setIndicator(whichOne + 1, true);
+        setIndicator(3-whichOne, true);
         show();
 
         if(triggered)
@@ -521,7 +520,7 @@ void maintenance(){
                 if(millis() % 500 == 0){
                     theaterChaseIdx = (theaterChaseIdx + 1) % NUM_RGB;
                     setAllLEDs(0);
-                    strip.setPixelColor(theaterChaseIdx, WHITE);
+                    strip.setPixelColor(NUM_RGB - theaterChaseIdx, WHITE);
                     strip.show();
                 }
 
@@ -633,22 +632,39 @@ void setDigit(uint8_t tube, uint8_t number){
     if(number > 9) // invalid digit check
         return;
 
+    // strange mapping because of backwards footprint on Rev A board
+    /*switch(number){
+        case 1: number = 0; break;
+        case 2: number = 9; break;
+        case 3: number = 8; break;
+        case 4: number = 7; break;
+        case 5: number = 6; break;
+        case 6: number = 5; break;
+        case 7: number = 4; break;
+        case 8: number = 3; break;
+        case 9: number = 2; break;
+        case 0: number = 1; break;
+    }*/
+
+    number = (11-number) % 10;
+
     const uint8_t UPPER = 0xF0;
     const uint8_t LOWER = 0x0F;
 
-    if(tube == 1){
+    // tube mapping reversed because of rev A bs
+    if(tube == 4){
         reg1 &= UPPER;
         reg1 |= number << 4;
     }
-    else if(tube == 2){
+    else if(tube == 3){
         reg1 &= LOWER;
         reg1 |= number;
     }
-    else if(tube == 3){
+    else if(tube == 2){
         reg2 &= UPPER;
         reg2 |= number << 4;
     }
-    else if(tube == 4){
+    else if(tube == 1){
         reg2 &= LOWER;
         reg2 |= number;
     }
@@ -683,9 +699,9 @@ void setIndicator(uint8_t tube, bool value){
     if(tube > 3) // there are only three indicator tubes here
         return;  // and again, we are not zero-indexing. (tube 1-3)
 
-    reg3 &= ~(1 << (8-tube));
+    reg3 &= ~(1 << (8-(3-tube)));
     if(value)
-       reg3 |= 1 << (8-tube);
+       reg3 |= 1 << (8-(3-tube));
 }
 
 void setAllIndicators(bool value){
