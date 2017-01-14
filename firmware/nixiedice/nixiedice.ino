@@ -18,13 +18,13 @@
 
 /* INPUT DEFINES */
 // pushbutton switch pins
-#define BTN_RST 7
-#define BTN_GO 6
+#define BTN_RST 6
+#define BTN_GO 7
 // rotary encoder pins
-#define DSEL_A A2
-#define DSEL_B A3
-#define NSEL_A 9
-#define NSEL_B 10
+#define DSEL_A 9
+#define DSEL_B 10
+#define NSEL_A A2
+#define NSEL_B A3
 // random seed (analog read) pins
 #define RAND A0
 
@@ -89,7 +89,6 @@ void setup() {
 
     randomSeed(analogRead(RAND));
     Serial.begin(9600); // debugging only
-    //Serial.end();
 
     // lets goooo
     digitalWrite(HVPS_EN, HIGH);
@@ -114,7 +113,7 @@ void loop() {
     uint32_t color = GREEN;
 
     Serial.println("inital loop");
-    
+
     while(!goPressed){
 
         if(millis() % 30 == 0){
@@ -216,7 +215,7 @@ void loop() {
         setHigherHalf(curNSel);
         setLowerHalf(curDSel);
         show();
-        
+
         if(digitalRead(BTN_RST) == LOW){
             delay(10);  // debounce initial presses
             Serial.println("RESET pressed");
@@ -285,7 +284,7 @@ roll:
     uint8_t whichOne = 0;
     uint8_t theaterChaseIdx = 0;
     setAllLEDs(0);
-    strip.setPixelColor(NUM_RGB - theaterChaseIdx, MAGENTA);
+    strip.setPixelColor(theaterChaseIdx, MAGENTA);
     strip.show();
     delay(1);
 
@@ -303,11 +302,11 @@ roll:
             whichOne = (whichOne + 1) % 3;
             triggered = true;
         }
-        
+
         if(t % 500 == 0){
             theaterChaseIdx = (theaterChaseIdx + 1) % NUM_RGB;
             setAllLEDs(0);
-            strip.setPixelColor(NUM_RGB - 1 - theaterChaseIdx, MAGENTA);
+            strip.setPixelColor(theaterChaseIdx, MAGENTA);
             strip.show();
             triggered = true;
         }
@@ -504,12 +503,12 @@ void maintenance(){
         strip.setPixelColor(i, 0); // turn off LED
     }
     strip.show();
-    
+
     //uint8_t reg3_temp = getRegValue(3);
     //setAllIndicators(true);
     //show();
-    
-    
+
+
     uint8_t theaterChaseIdx = 0;
     setAllLEDs(0);
     strip.setPixelColor(theaterChaseIdx, WHITE);
@@ -529,7 +528,7 @@ void maintenance(){
                 if(millis() % 500 == 0){
                     theaterChaseIdx = (theaterChaseIdx + 1) % NUM_RGB;
                     setAllLEDs(0);
-                    strip.setPixelColor(NUM_RGB -1 - theaterChaseIdx, WHITE);
+                    strip.setPixelColor(theaterChaseIdx, WHITE);
                     strip.show();
                 }
 
@@ -541,7 +540,7 @@ void maintenance(){
                         delay(10);
                     }
                     delay(10); // wait out whatever
-                    
+
                     Serial.println("Leaving maintenance mode due to press of GO or RESET");
                     break;
                 }
@@ -565,10 +564,10 @@ void maintenance(){
     for(uint8_t i = 0; i < NUM_RGB; i++)
         strip.setPixelColor(i, colors[i]); // restore LED color
     strip.show();
-    
+
     //setRegValue(3, reg3_temp);
     //show();
-    
+
     lastActive = millis();
 }
 
@@ -647,7 +646,8 @@ void setDigit(uint8_t tube, uint8_t number){
     if(number > 9) // invalid digit check
         return;
     // strange mapping because of backwards footprint on Rev A board
-    switch(number){
+    // ignore if on rev B or later
+    /*switch(number){
         case 1: number = 0; break;
         case 2: number = 9; break;
         case 3: number = 8; break;
@@ -659,7 +659,8 @@ void setDigit(uint8_t tube, uint8_t number){
         case 9: number = 2; break;
         case 0: number = 1; break;
     }
-    //number = (11-number) % 10;
+    number = (11-number) % 10;
+    */
 
     switch(number){
         case 1: number = B1000; break;
@@ -673,25 +674,24 @@ void setDigit(uint8_t tube, uint8_t number){
         case 9: number = B1001; break;
         case 0: number = B0000; break;
     }
-    
+
 
     const uint8_t UPPER = 0xF0;
     const uint8_t LOWER = 0x0F;
 
-    // tube mapping reversed because of rev A bs
-    if(tube == 4){
+    if(tube == 1){
         reg1 &= ~UPPER;
         reg1 |= number << 4;
     }
-    else if(tube == 3){
+    else if(tube == 2){
         reg1 &= ~LOWER;
         reg1 |= number;
     }
-    else if(tube == 2){
+    else if(tube == 3){
         reg2 &= ~UPPER;
         reg2 |= number << 4;
     }
-    else if(tube == 1){
+    else if(tube == 4){
         reg2 &= ~LOWER;
         reg2 |= number;
     }
@@ -709,21 +709,16 @@ void setLowerHalf(uint8_t number){
     setDigit(4, number % 10);
 }
 
-void setAllDigits(uint32_t number){
+void setAllDigits(uint16_t number){
     if(number > 9999)
         return;
-    //Serial.println(number);
+
     setDigit(1, number / 1000);
-    //Serial.println(number/1000);
     number -= number/1000 * 1000;
-    //Serial.println(number/100);
     setDigit(2, number / 100);
     number -= number/100 * 100;
-    //Serial.println(number/10);
     setDigit(3, number / 10);
     number -= number/10 * 10;
-    //Serial.println(number%10);
-    //Serial.println();
     setDigit(4, number % 10); // mod is unnecessary here i guess
 }
 
@@ -731,9 +726,7 @@ void setIndicator(uint8_t tube, bool value){
     if(tube > 3) // there are only three indicator tubes here
         return;  // and again, we are not zero-indexing. (tube 1-3)
 
-    reg3 &= ~(1 << (8-1-(3-tube)));
     if(value)
-       reg3 |= 1 << (8-1-(3-tube));
 }
 
 void setAllIndicators(bool value){
@@ -788,4 +781,3 @@ void setRegValue(uint8_t reg, uint8_t value){
     else if(reg == 3)
         reg3 = value;
 }
-
