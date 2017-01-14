@@ -285,7 +285,7 @@ roll:
     uint8_t whichOne = 0;
     uint8_t theaterChaseIdx = 0;
     setAllLEDs(0);
-    strip.setPixelColor(NUM_RGB - theaterChaseIdx, MAGENTA);
+    strip.setPixelColor(NUM_RGB - 1 - theaterChaseIdx, MAGENTA);
     strip.show();
     delay(1);
 
@@ -313,7 +313,7 @@ roll:
         }
 
         clearIndicators();
-        setIndicator(whichOne, true);
+        setIndicator(whichOne+1, true);
         show();
 
         if(triggered)
