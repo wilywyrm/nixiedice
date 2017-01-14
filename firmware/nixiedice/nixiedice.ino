@@ -18,13 +18,13 @@
 
 /* INPUT DEFINES */
 // pushbutton switch pins
-#define BTN_RST 6
-#define BTN_GO 7
+#define BTN_RST 7
+#define BTN_GO 6
 // rotary encoder pins
-#define DSEL_A 9
-#define DSEL_B 10
-#define NSEL_A A2
-#define NSEL_B A3
+#define DSEL_A A2
+#define DSEL_B A3
+#define NSEL_A 9
+#define NSEL_B 10
 // random seed (analog read) pins
 #define RAND A0
 
@@ -89,6 +89,7 @@ void setup() {
 
     randomSeed(analogRead(RAND));
     Serial.begin(9600); // debugging only
+    //Serial.end();
 
     // lets goooo
     digitalWrite(HVPS_EN, HIGH);
@@ -113,6 +114,7 @@ void loop() {
     uint32_t color = GREEN;
 
     Serial.println("inital loop");
+    
     while(!goPressed){
 
         if(millis() % 30 == 0){
@@ -285,6 +287,7 @@ roll:
     setAllLEDs(0);
     strip.setPixelColor(NUM_RGB - theaterChaseIdx, MAGENTA);
     strip.show();
+    delay(1);
 
     while(digitalRead(BTN_GO) == LOW){
         uint32_t t = millis();
@@ -304,13 +307,13 @@ roll:
         if(t % 500 == 0){
             theaterChaseIdx = (theaterChaseIdx + 1) % NUM_RGB;
             setAllLEDs(0);
-            strip.setPixelColor(NUM_RGB - theaterChaseIdx, MAGENTA);
+            strip.setPixelColor(NUM_RGB - 1 - theaterChaseIdx, MAGENTA);
             strip.show();
             triggered = true;
         }
 
         clearIndicators();
-        setIndicator(3-whichOne, true);
+        setIndicator(whichOne, true);
         show();
 
         if(triggered)
@@ -352,7 +355,7 @@ roll:
     uint32_t lastFlash = millis();
     while(true){    // wait for button press and do pwm things, also flash indicators 5 times
         //Serial.println("Displaying final result");
-        if(millis() >= lastFlash + 500 && numFlashes < 10){
+        if(millis() >= lastFlash + 1000 && numFlashes < 6){
             clearIndicators();
             if(numFlashes % 2){ // on flashes 0,2,4,6,8, display sum and indicators 1,3
                 setAllDigits(sum);
@@ -494,13 +497,17 @@ void maintenance(){
         delay(10);  // anotha one
     }
 
+    // save indicator state
     uint32_t colors[NUM_RGB];
     for(uint8_t i = 0; i < NUM_RGB; i++){
         colors[i] = strip.getPixelColor(i);
         strip.setPixelColor(i, 0); // turn off LED
     }
     strip.show();
-
+    uint8_t reg3_temp = getRegValue(3);
+    setAllIndicators(true);
+    show();
+    
     uint8_t theaterChaseIdx = 0;
     setAllLEDs(0);
     strip.setPixelColor(theaterChaseIdx, WHITE);
@@ -516,11 +523,11 @@ void maintenance(){
             setAllDigits(i*1111);
             show();
 
-            while(millis() < start + 1000){ // wait for button press inside this loop
+            while(millis() < start + 2000){ // wait for button press inside this loop
                 if(millis() % 500 == 0){
                     theaterChaseIdx = (theaterChaseIdx + 1) % NUM_RGB;
                     setAllLEDs(0);
-                    strip.setPixelColor(NUM_RGB - theaterChaseIdx, WHITE);
+                    strip.setPixelColor(NUM_RGB -1 - theaterChaseIdx, WHITE);
                     strip.show();
                 }
 
@@ -529,32 +536,36 @@ void maintenance(){
                 if(digitalRead(BTN_GO) == LOW || digitalRead(BTN_RST) == LOW){
                     noPress = false;
                     while(digitalRead(BTN_GO) == LOW || digitalRead(BTN_RST) == LOW){ // wait out press
-                        noPress = false;
                         delay(10);
                     }
                     delay(10); // wait out whatever
-
-                    // restore LED data and turn back on
-                    for(uint8_t i = 0; i < NUM_RGB; i++)
-                        strip.setPixelColor(i, colors[i]); // restore LED color
-                    strip.show();
-                    lastActive = millis();
+                    
                     Serial.println("Leaving maintenance mode due to press of GO or RESET");
-                    return;
+                    break;
                 }
 
                 NSel.tick();
                 DSel.tick();
                 if(NSelPos != NSel.getPosition() || DSelPos != DSel.getPosition()){
                     Serial.println("Leaving maintenance mode due to Sel adjustment");
+                    noPress = false;
                     break;
                 }
                 NSelPos = NSel.getPosition();
                 DSelPos = DSel.getPosition();
             }
             start = millis();
+            if(!noPress)
+                break;
         }
     }
+    // restore indicator data and turn back on
+    for(uint8_t i = 0; i < NUM_RGB; i++)
+        strip.setPixelColor(i, colors[i]); // restore LED color
+    strip.show();
+    setRegValue(3, reg3_temp);
+    show();
+    lastActive = millis();
 }
 
 void sleep(){
@@ -631,9 +642,8 @@ uint8_t reg1, reg2, reg3;
 void setDigit(uint8_t tube, uint8_t number){
     if(number > 9) // invalid digit check
         return;
-
     // strange mapping because of backwards footprint on Rev A board
-    /*switch(number){
+    switch(number){
         case 1: number = 0; break;
         case 2: number = 9; break;
         case 3: number = 8; break;
@@ -644,28 +654,41 @@ void setDigit(uint8_t tube, uint8_t number){
         case 8: number = 3; break;
         case 9: number = 2; break;
         case 0: number = 1; break;
-    }*/
+    }
+    //number = (11-number) % 10;
 
-    number = (11-number) % 10;
+    switch(number){
+        case 1: number = B1000; break;
+        case 2: number = B0100; break;
+        case 3: number = B1100; break;
+        case 4: number = B0010; break;
+        case 5: number = B1010; break;
+        case 6: number = B0110; break;
+        case 7: number = B1110; break;
+        case 8: number = B0001; break;
+        case 9: number = B1001; break;
+        case 0: number = B0000; break;
+    }
+    
 
     const uint8_t UPPER = 0xF0;
     const uint8_t LOWER = 0x0F;
 
     // tube mapping reversed because of rev A bs
     if(tube == 4){
-        reg1 &= UPPER;
+        reg1 &= ~UPPER;
         reg1 |= number << 4;
     }
     else if(tube == 3){
-        reg1 &= LOWER;
+        reg1 &= ~LOWER;
         reg1 |= number;
     }
     else if(tube == 2){
-        reg2 &= UPPER;
+        reg2 &= ~UPPER;
         reg2 |= number << 4;
     }
     else if(tube == 1){
-        reg2 &= LOWER;
+        reg2 &= ~LOWER;
         reg2 |= number;
     }
 }
@@ -682,16 +705,21 @@ void setLowerHalf(uint8_t number){
     setDigit(4, number % 10);
 }
 
-void setAllDigits(uint16_t number){
+void setAllDigits(uint32_t number){
     if(number > 9999)
         return;
-
+    //Serial.println(number);
     setDigit(1, number / 1000);
-    number =- number/1000 * 1000;
+    //Serial.println(number/1000);
+    number -= number/1000 * 1000;
+    //Serial.println(number/100);
     setDigit(2, number / 100);
-    number =- number/100 * 100;
+    number -= number/100 * 100;
+    //Serial.println(number/10);
     setDigit(3, number / 10);
-    number =- number/10 * 10;
+    number -= number/10 * 10;
+    //Serial.println(number%10);
+    //Serial.println();
     setDigit(4, number % 10); // mod is unnecessary here i guess
 }
 
@@ -699,9 +727,9 @@ void setIndicator(uint8_t tube, bool value){
     if(tube > 3) // there are only three indicator tubes here
         return;  // and again, we are not zero-indexing. (tube 1-3)
 
-    reg3 &= ~(1 << (8-(3-tube)));
+    reg3 &= ~(1 << (8-1-(3-tube)));
     if(value)
-       reg3 |= 1 << (8-(3-tube));
+       reg3 |= 1 << (8-1-(3-tube));
 }
 
 void setAllIndicators(bool value){
@@ -734,3 +762,26 @@ void setAllLEDs(uint32_t color){
     for(uint16_t i = 0; i < NUM_RGB; i++)
         strip.setPixelColor(i, color);
 }
+
+uint8_t getRegValue(uint8_t reg){
+    if(reg < 1 || reg > 3)
+        return -1; // ehhh
+    else if(reg == 1)
+        return reg1;
+    else if(reg == 2)
+        return reg2;
+    else if(reg == 3)
+        return reg3;
+}
+
+void setRegValue(uint8_t reg, uint8_t value){
+    if(reg < 1 || reg > 3)
+        return;
+    else if(reg == 1)
+        reg1 = value;
+    else if(reg == 2)
+        reg2 = value;
+    else if(reg == 3)
+        reg3 = value;
+}
+
