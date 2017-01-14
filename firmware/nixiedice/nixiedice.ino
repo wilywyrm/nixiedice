@@ -504,9 +504,11 @@ void maintenance(){
         strip.setPixelColor(i, 0); // turn off LED
     }
     strip.show();
-    uint8_t reg3_temp = getRegValue(3);
-    setAllIndicators(true);
-    show();
+    
+    //uint8_t reg3_temp = getRegValue(3);
+    //setAllIndicators(true);
+    //show();
+    
     
     uint8_t theaterChaseIdx = 0;
     setAllLEDs(0);
@@ -563,8 +565,10 @@ void maintenance(){
     for(uint8_t i = 0; i < NUM_RGB; i++)
         strip.setPixelColor(i, colors[i]); // restore LED color
     strip.show();
-    setRegValue(3, reg3_temp);
-    show();
+    
+    //setRegValue(3, reg3_temp);
+    //show();
+    
     lastActive = millis();
 }
 
