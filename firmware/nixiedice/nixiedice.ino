@@ -312,7 +312,7 @@ roll:
         }
 
         clearIndicators();
-        setIndicator(whichOne, true);
+        setIndicator(whichOne+1, true);
         show();
 
         if(triggered)
