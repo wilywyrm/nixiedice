@@ -726,7 +726,9 @@ void setIndicator(uint8_t tube, bool value){
     if(tube > 3) // there are only three indicator tubes here
         return;  // and again, we are not zero-indexing. (tube 1-3)
 
+    reg3 &= ~(1 << (8-tube));
     if(value)
+       reg3 |= 1 << (8-tube);
 }
 
 void setAllIndicators(bool value){
