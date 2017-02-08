@@ -225,6 +225,8 @@ void loop() {
                 if(digitalRead(BTN_GO) == LOW && curNSel == 0 && curDSel == 0){
                     shouldReset = false;
                     maintenance();
+                    curNSel = lastNSel;
+                    curDSel = lastDSel;
                 }
                 delay(10);
             }
@@ -262,6 +264,8 @@ void loop() {
                     if(digitalRead(BTN_RST) == LOW){
                         Serial.println("RESET also pressed while GO pressed");
                         maintenance();
+                        curNSel = lastNSel;
+                        curDSel = lastDSel;
                     }
                 }
             }
