@@ -1,4 +1,4 @@
-(kicad_pcb (version 4) (host pcbnew 4.0.4-stable)
+(kicad_pcb (version 4) (host pcbnew 4.0.5)
 
   (general
     (links 170)
@@ -2329,7 +2329,7 @@
   (gr_text 170V! (at 38.354 38.1) (layer F.SilkS)
     (effects (font (size 1.27 1.143) (thickness 0.254)))
   )
-  (gr_text "Rev B" (at 43.434 3.048) (layer F.SilkS)
+  (gr_text "Rev Bee" (at 44.7 3.048) (layer F.SilkS)
     (effects (font (size 1.5 1.5) (thickness 0.3)))
   )
   (gr_text "Designed by Rufei Zhou in Urbana" (at 47.498 42.672) (layer F.SilkS)
